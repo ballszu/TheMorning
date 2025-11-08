@@ -724,6 +724,50 @@ section {
     max-width: 1450px;
   }
 }
+/**
+ * head
+ */
+.heading,
+.heading-fluid {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: var(--pico-spacing);
+  padding-left: var(--pico-spacing);
+}
+
+@media (min-width: 576px) {
+  .heading {
+    max-width: 510px;
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+@media (min-width: 768px) {
+  .heading {
+    max-width: 700px;
+  }
+}
+@media (min-width: 1024px) {
+  .heading {
+    max-width: 950px;
+  }
+}
+@media (min-width: 1280px) {
+  .heading {
+    max-width: 1200px;
+  }
+}
+@media (min-width: 1536px) {
+  .heading {
+    max-width: 1450px;
+  }
+}
+.heading h1 {
+  --pico-font-family: Pacifico, cursive;
+  --pico-font-weight: 400;
+  --pico-typography-spacing-vertical: 0.5rem;
+}
 
 /**
  * Grid
