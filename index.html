@@ -1,13 +1,63 @@
- <!DOCTYPE html>
-<html lang="en" color-scheme="dark">
+<!DOCTYPE html>
+<html lang="en" color-scheme="light">
     <head>
         <title>The Morning</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/digitallytailored/classless@latest/classless.min.css">
+        <style>
+            /* A little style for the quote block */
+            blockquote {
+                border-left: 4px solid #ccc;
+                padding-left: 1rem;
+                font-style: italic;
+            }
+            blockquote footer {
+                font-style: normal;
+                font-weight: bold;
+                margin-top: 0.5rem;
+            }
+        </style>
     </head>
 <body>
+<!--HEADING!!!!-->
     <section class="glass">
         <center><h1>The Morning</h1></center>
-        <center><p>Your Daily Quick Magazine</p></center>
+        <center><h3>Your Daily Quick Magazine</h3></center>
     </section>
+<!-- Quote -->
+    <section>
+        <h2>Quote of the Day</h2>
+
+        <blockquote id="quote-content">
+            <p>Loading quote...</p>
+            <progress></progress>
+        </blockquote>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            async function getQuote() {
+                const quoteElement = document.getElementById('quote-content');
+
+                try {
+                    const response = await fetch('https://zenquotes.io/api/quotes');
+
+                    const data = await response.json();
+                    const quote = data[0].q;
+                    const author = data[0].a;
+                    quoteElement.innerHTML = `
+                        <p>"${quote}"</p>
+                        <footer>— ${author}</footer>
+                    `;
+
+                } catch (error) {
+                    // This 'catch' block runs if the 'fetch' fails
+                    console.error("Error fetching quote:", error);
+                    quoteElement.innerHTML = "<p>Could not load quote of the day.</p>";
+                }
+            }
+            getQuote();
+        });
+    </script>
 </body>
 </html>
