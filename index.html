@@ -1,16 +1,211 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-s">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" href="pico-main/css/pico.lime.min.css">
-    <title>Hello world!</title>
+    <link rel="stylesheet" href="pico-main/css/pico.lime.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <title>The Morning</title>
+
+    <style>
+      article {
+        min-height: 150px;
+        padding: var(--pico-spacing);
+      }
+
+      .top-box {
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      #xkcd-box img {
+        width: 100%;
+        height: auto;
+        border-radius: var(--pico-border-radius);
+        margin-bottom: var(--pico-spacing);
+      }
+      
+      .widget-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .widget-value {
+         margin-bottom: 0;
+      }
+
+    </style>
   </head>
   <body>
-    <main class="container">
-      <center><h1>The Morning Magazine!<sup>✨</sup></h1></center>
-      <progress></progress>
+
+    <main class="heading">
+      <center><h1>The Morning Magazine!<sup>✨</sup></h1></center><br>
     </main>
-  </body>
+
+    <main class="container">
+      
+      <article class="top-box" id="quote-box">
+        <progress></progress>
+      </article>
+
+      <div class="grid">
+        <article id="aqi-box">
+          <progress></progress>
+        </article>
+        
+        <article id="rain-box">
+          <progress></progress>
+        </article>
+        
+        <article id="xkcd-box">
+          <progress></progress>
+        </article>
+      </div>
+
+    </main>
+
+<script>
+      // Wait for the page to load before running scripts
+      document.addEventListener('DOMContentLoaded', () => {
+        
+        // 1. Select all the boxes
+        const quoteBox = document.getElementById('quote-box');
+        const aqiBox = document.getElementById('aqi-box');
+        const rainBox = document.getElementById('rain-box');
+        const xkcdBox = document.getElementById('xkcd-box');
+
+        // --- 1. NEW: Get Location from IP ---
+        async function getLocation() {
+          try {
+            // Using a free, secure IP geolocation API
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            return {
+              lat: data.latitude,
+              lon: data.longitude,
+              city: data.city || 'your location' // Use 'your location' as a fallback
+            };
+          } catch (error) {
+            console.error('Location Error:', error);
+            // Return null if we can't get the location
+            return null;
+          }
+        }
+
+        // --- 2. Get Daily Quote (Fixed with Proxy) ---
+        async function getQuote() {
+          try {
+            const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fapi.quotable.io%2Frandom');
+            const data = await response.json();
+            quoteBox.innerHTML = `
+              <figure>
+                <blockquote>"${data.content}"</blockquote>
+                <figcaption>- ${data.author}</figcaption>
+              </figure>
+            `;
+          } catch (error) {
+            console.error('Quote Error:', error);
+            quoteBox.innerHTML = '<p>Could not fetch quote.</p>';
+          }
+        }
+
+        // --- 3. Get AQI (MODIFIED) ---
+        // Now accepts lat, lon, and city as arguments
+        async function getAQI(lat, lon, city) {
+          try {
+            const response = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=us_aqi`);
+            const data = await response.json();
+            const currentHour = new Date().getHours();
+            const aqi = data.hourly.us_aqi[currentHour];
+
+            let aqiStatus = "Good";
+            if (aqi > 50) aqiStatus = "Moderate";
+            if (aqi > 100) aqiStatus = "Unhealthy (Sensitive)";
+            if (aqi > 150) aqiStatus = "Unhealthy";
+            if (aqi > 200) aqiStatus = "Very Unhealthy";
+            if (aqi > 300) aqiStatus = "Hazardous";
+
+            // Use the city variable in the title
+            aqiBox.innerHTML = `
+              <h3 class="widget-title">AQI in ${city}</h3>
+              <h2 class="widget-value">${aqi}</h2>
+              <p>(${aqiStatus})</p>
+            `;
+          } catch (error) {
+            console.error('AQI Error:', error);
+            aqiBox.innerHTML = '<h3>AQI</h3><p>Could not fetch data.</p>';
+          }
+        }
+
+        // --- 4. Get Rain Forecast (MODIFIED) ---
+        // Now accepts lat, lon, and city as arguments
+        async function getRain(lat, lon, city) {
+          try {
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation_probability&forecast_days=1`);
+            const data = await response.json();
+            const currentHour = new Date().getHours();
+            const next12Hours = data.hourly.precipitation_probability.slice(currentHour, currentHour + 12);
+            const maxRainChance = Math.max(...next12Hours);
+
+            // Use the city variable in the title
+            rainBox.innerHTML = `
+              <h3 class="widget-title">Rain in ${city}</h3>
+              <h2 class="widget-value">${maxRainChance}%</h2>
+              <p>Chance in next 12 hrs</p>
+            `;
+          } catch (error) {
+            console.error('Rain Error:', error);
+            rainBox.innerHTML = '<h3>Rain</h3><p>Could not fetch data.</p>';
+          }
+        }
+
+        // --- 5. Get xkcd Comic (Fixed with Proxy) ---
+        async function getXKCD() {
+          try {
+            const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fxkcd.com%2Finfo.0.json');
+            const data = await response.json();
+            
+            xkcdBox.innerHTML = `
+              <h3 class="widget-title">${data.title}</h3>
+              <img src="${data.img}" alt="${data.alt}">
+              <small>${data.alt}</small>
+            `;
+          } catch (error) {
+            console.error('xkcd Error:', error);
+            xkcdBox.innerHTML = '<h3>xkcd</h3><p>Could not fetch comic.</p>';
+          }
+        }
+
+        // --- 6. NEW: Main function to run everything ---
+        async function runDashboard() {
+          // Start the quote and comic fetch immediately
+          // (they don't depend on location)
+          getQuote();
+          getXKCD();
+
+          // First, get the user's location
+          const location = await getLocation();
+
+          // If location was fetched successfully, get weather/AQI
+          if (location) {
+            getAQI(location.lat, location.lon, location.city);
+            getRain(location.lat, location.lon, location.city);
+          } else {
+            // Handle the case where location failed
+            aqiBox.innerHTML = '<h3>AQI</h3><p>Could not get location.</p>';
+            rainBox.innerHTML = '<h3>Rain</h3><p>Could not get location.</p>';
+          }
+        }
+
+        // --- Run the main dashboard function ---
+        runDashboard();
+
+      });
+    </script>
+    </body>
 </html>

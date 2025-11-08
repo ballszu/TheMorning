@@ -738,7 +738,8 @@ section {
 
 @media (min-width: 576px) {
   .heading {
-    max-width: 510px;
+    
+    max-width: 840px;
     padding-right: 0;
     padding-left: 0;
   }
@@ -764,6 +765,11 @@ section {
   }
 }
 .heading h1 {
+  --pico-font-family: Pacifico, cursive;
+  --pico-font-weight: 400;
+  --pico-typography-spacing-vertical: 0.5rem;
+}
+.heading h6 {
   --pico-font-family: Pacifico, cursive;
   --pico-font-weight: 400;
   --pico-typography-spacing-vertical: 0.5rem;
